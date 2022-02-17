@@ -1,5 +1,8 @@
 import { GetServerSideProps } from "next"
 import { JWT } from "../utils/jwt";
+import type { NextPage } from 'next'
+import { OAuth } from "../utils/oauth";
+import { Center, Avatar, Heading, Box } from '@chakra-ui/react'
 
 interface User {
   userName: string,
@@ -9,8 +12,27 @@ interface User {
   mail: string,
 }
 
-const LoggedIn = () => {
-  return <></>
+const LoggedIn: NextPage<{user?: User, isError: boolean}> = ({user, isError}) => {
+  if(isError) {
+    return (
+      <Center>
+        <Heading textAlign="center">エラーで取得できませんでした</Heading>
+      </Center>
+    );
+  }
+
+  return (
+    <Center height="100vh">
+      <Box>
+        <Center mb="1rem">
+          <Avatar src={user?.avatar} size="xl" />
+        </Center>
+        <Heading textAlign="center">{user?.lastName} {user?.firstName}</Heading>
+        <Heading textAlign="center">{user?.userName}</Heading>
+        <Heading textAlign="center" mt="1rem">{user?.mail}</Heading>
+      </Box>
+    </Center>
+  );
 }
 
 export const getServerSideProps: GetServerSideProps<{user?: User, isError: boolean}> = async context => {
@@ -28,13 +50,30 @@ export const getServerSideProps: GetServerSideProps<{user?: User, isError: boole
     code = _code;
   }
 
-  const jwt = new JWT(code)
+  try {
+    const oauth = new OAuth(code)
 
-  await jwt.parse()
+    const jwt = new JWT(oauth)
 
-  return {
-    props: {
-      isError: false
+    const token = await jwt.parse()
+
+    return {
+      props: {
+        isError: false,
+        user: {
+          userName: token["nick_name"],
+          firstName: token["given_name"],
+          lastName: token["family_name"],
+          avatar: token["picture"],
+          mail: token["email"],
+        },
+      }
+    }
+  }catch(error) {
+    return {
+      props: {
+        isError: true,
+      }
     }
   }
 }

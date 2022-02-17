@@ -1,56 +1,41 @@
 import jwt, {VerifyOptions } from 'jsonwebtoken'
 import request from 'then-request'
+import { OAuth } from './oauth'
 
 const PUBLIC_KEY_ENDPOINT = "https://api.sso.cateiru.com/oauth/jwt/key"
-const TOKEN_ENDPOINT = "https://api.sso.cateiru.com/oauth/token"
 
 export class JWT {
-  private code: string
+  private oauth: OAuth
   private option: VerifyOptions
 
-  constructor(code: string) {
-    this.code = code
+  constructor(oauth: OAuth) {
+    this.oauth = oauth;
 
     this.option = {
       algorithms: ["RS256"]
     };
   }
 
-  public async parse() {
-    const token = await this.getJWT()
+  public async parse(): Promise<jwt.JwtPayload> {
+    const token = await this.oauth.getJWT()
 
     const key = await this.getPublicKey();
-    let decoded: string | jwt.Jwt | jwt.JwtPayload | undefined;
+    let j: jwt.JwtPayload = {};
 
     jwt.verify(token, key, this.option, (err, decoded) => {
       if (err) {
-        console.log(err.message)
+        throw new Error(err.message)
       }else {
-        decoded = decoded;
-        console.log(decoded)
+        j = decoded as jwt.JwtPayload;
       }
 
     })
 
-    console.log(decoded)
+    return j;
   }
 
-  private async getJWT(): Promise<string> {
-    const res = await request("GET", `${TOKEN_ENDPOINT}?grant_type=authorization_code&code=${this.code}&redirect_uri=${process.env.REDIRECT_URI}`, {
-      headers: {
-        authorization: `Basic ${process.env.TOKEN_SECRET}`
-      }
-    })
-
-    if(res.statusCode !== 200) {
-      throw new Error("failed connected")
-    }
-
-    const key = JSON.parse(res.getBody("utf-8"))
-
-    return key["id_token"] || ""
-  }
-
+  // JWTの検証に使うpublic keyを取得する
+  // 注意: public keyはCateiruSSOのデプロイごとに変わるので長い間キャッシュ無いほうが良い
   private async getPublicKey(): Promise<string> {
     const res = await request("GET", PUBLIC_KEY_ENDPOINT)
 
