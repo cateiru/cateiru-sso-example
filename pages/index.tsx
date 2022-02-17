@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 const Home: NextPage = () => {
   return (
-    <Center>
+    <Center height="100vh">
       <Link href="/api/login" passHref>
         <Button>ログイン</Button>
       </Link>
