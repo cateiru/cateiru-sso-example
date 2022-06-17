@@ -1,7 +1,7 @@
 import jwt, {VerifyOptions } from 'jsonwebtoken'
 import request from 'then-request'
 
-const TOKEN_ENDPOINT = "https://api.sso.cateiru.com/oauth/token"
+const TOKEN_ENDPOINT = "https://api.sso.cateiru.com/v1/oauth/token"
 
 export class OAuth {
   private code: string
