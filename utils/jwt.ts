@@ -2,7 +2,7 @@ import jwt, {VerifyOptions } from 'jsonwebtoken'
 import request from 'then-request'
 import { OAuth } from './oauth'
 
-const PUBLIC_KEY_ENDPOINT = "https://api.sso.cateiru.com/oauth/jwt/key"
+const PUBLIC_KEY_ENDPOINT = "https://api.sso.cateiru.com/v1/oauth/jwt/key"
 
 export class JWT {
   private oauth: OAuth
